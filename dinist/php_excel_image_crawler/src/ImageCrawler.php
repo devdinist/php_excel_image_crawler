@@ -38,6 +38,7 @@ class ImageCrawler{
     private array $curl_result = [];
     private array $restart_url = [];
     private array $restart_url2 = [];
+    private array $redirect_url = [];
     private DateTime $startTime;
     private DateTime $endTime;
 
@@ -177,7 +178,7 @@ class ImageCrawler{
                         continue;
                     }
         
-                    $each_data2 = Consts::HTTP->value.$each_data2;
+                    $each_data2 = $this->checkURL($each_data2) ? Consts::HTTP->value.$each_data2 : $each_data2;
         
                     $current_fileurl = $each_data2;
                     $current_fileinfo = pathinfo($current_fileurl);
@@ -209,7 +210,11 @@ class ImageCrawler{
 
                     for($i = 0; count($this->curl_result) && $i < $this->handlerCount; $i++){
                         // 현재 curl 처리한 url 응답코드가 200이 아닌경우
-                        if($this->curl_result[$i] && $this->curl_result[$i]['httpcode'] != 200){
+
+
+                        if($this->curl_result[$i] && $this->curl_result[$i]['httpcode'] === 302){
+                            $this->redirect_url[] = $this->curl_result[$i]['info']['redirect_url'];
+                        }else if($this->curl_result[$i] && $this->curl_result[$i]['httpcode'] != 200){
                             $this->restart_url[] = $this->url_array[$i];
                         }
             
@@ -238,6 +243,45 @@ class ImageCrawler{
                 }
             endif;
         endforeach;
+
+
+        if(count($this->redirect_url)){
+            $this->curl_set($this->redirect_url,false);
+            $this->curl_exec_and_result();
+
+            for($i = 0; count($this->curl_result) && $i < $this->handlerCount; $i++){
+                // 현재 curl 처리한 url 응답코드가 200이 아닌경우
+
+
+                var_dump($this->curl_result[$i]);
+
+                if($this->curl_result[$i] && $this->curl_result[$i]['httpcode'] != 200){
+                    $this->restart_url[] = $this->redirect_url[$i];
+                }
+
+                // 다운로드 가능한 경우 다운로드 처리
+                if($this->curl_result[$i] && $this->curl_result[$i]['downloadable']):
+
+                    $current_fileinfo = pathinfo($this->redirect_url[$i]);
+                    $current_filename = $current_fileinfo['basename'];
+                    $current_filename_absolute_path = __DIR__.DIRECTORY_SEPARATOR.$this->download_path.DIRECTORY_SEPARATOR.$current_filename;
+
+                    $downfilepointer = fopen(__DIR__.DIRECTORY_SEPARATOR.$this->download_path.DIRECTORY_SEPARATOR.$current_filename,'wb');
+                    fwrite($downfilepointer,$this->curl_result[$i]['content']);
+                    fclose($downfilepointer);
+
+                    fwrite($this->success_filepointer,"success : {$this->redirect_url[$i]} , path : {$this->redirect_url[$i]}\n");
+
+                    $this->success_count++;
+
+                    $this->downloaded_array[] = $this->redirect_url[$i];
+
+                endif;
+            }
+
+            // 현재 사이클에서 curl 모두 돌리고 나면 url 배열 초기화
+            $this->redirect_url = [];
+        }
         
         // 초기 url에서 실패한적이 있어 대체 경로 삽입 해야하는 경우 (추가 path)
         for($i = 0; $i < count($this->new_path_array); $i++){
