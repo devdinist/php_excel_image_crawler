@@ -1,0 +1,20 @@
+{
+    "name": "dinist/php_excel_image_crawler",
+    "description": "Crawling Image from URL exists in Excel file ",
+    "authors": [
+        {
+            "name": "dinist(PJG)",
+            "email": "dinist@naver.com",
+            "homepage": "https://github.com/devdinist/php_excel_image_crawler"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "phpoffice/phpspreadsheet": "^1.29"
+    },
+    "autoload": {
+        "psr-4": {
+            "dinist\\php_excel_image_crawler\\" : "dinist/php_excel_image_crawler/src/"
+        }
+    }
+}
