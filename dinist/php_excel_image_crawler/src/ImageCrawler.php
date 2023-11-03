@@ -252,9 +252,6 @@ class ImageCrawler{
             for($i = 0; count($this->curl_result) && $i < $this->handlerCount; $i++){
                 // 현재 curl 처리한 url 응답코드가 200이 아닌경우
 
-
-                var_dump($this->curl_result[$i]);
-
                 if($this->curl_result[$i] && $this->curl_result[$i]['httpcode'] != 200){
                     $this->restart_url[] = $this->redirect_url[$i];
                 }
