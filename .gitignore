@@ -7,3 +7,5 @@ composer.lock
 /dinist/php_excel_image_crawler/src/excel/**
 /dinist/php_excel_image_crawler/src/download/**
 /dinist/php_excel_image_crawler/src/*.txt
+
+!/dinist/php_excel_image_crawler/src/excel/.gitkeep
